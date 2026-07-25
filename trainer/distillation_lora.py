@@ -100,8 +100,8 @@ class Trainer:
         )
 
         ##############################################################################################################
-        # lora_path = "logs/glance_fast_lora/checkpoint_model_000060/model.pt" # fast lora
-        lora_path = "logs/ode_loss_glance_timestep/checkpoint_model_000060/model.pt" # slow lora
+        lora_path = "logs/slow_lora.pt" # slow lora
+        # lora_path = "logs/fast_lora.pt" # fast lora
         ##############################################################################################################
 
         print(f"Loading trained LoRA weights from {lora_path}...")
