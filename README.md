@@ -11,10 +11,13 @@ python setup.py develop
 ```bash
 hf download Wan-AI/Wan2.1-T2V-1.3B  --local-dir wan_models/Wan2.1-T2V-1.3B
 hf download Wan-AI/Wan2.1-T2V-14B  --local-dir wan_models/Wan2.1-T2V-14B
-# Causal Forcing
+# base model
 hf download zhuhz22/Causal-Forcing chunkwise/ar_diffusion.pt --local-dir checkpoints
 # dataset
 hf download gdhe17/Self-Forcing vidprom_filtered_extended.txt --local-dir prompts
+# slow lora and fast lora
+wget https://huggingface.co/zhuobai/Glance-Forcing/resolve/main/fast_lora.pt
+wget https://huggingface.co/zhuobai/Glance-Forcing/resolve/main/fast_lora.pt
 ```
 
 ### 💡 如果下载速度较慢，可以试试下面这个镜像站
