@@ -17,7 +17,7 @@ hf download zhuhz22/Causal-Forcing chunkwise/ar_diffusion.pt --local-dir checkpo
 hf download gdhe17/Self-Forcing vidprom_filtered_extended.txt --local-dir prompts
 # slow lora and fast lora
 wget https://huggingface.co/zhuobai/Glance-Forcing/resolve/main/fast_lora.pt
-wget https://huggingface.co/zhuobai/Glance-Forcing/resolve/main/fast_lora.pt
+wget https://huggingface.co/zhuobai/Glance-Forcing/resolve/main/slow_lora.pt
 ```
 
 ### 💡 如果下载速度较慢，可以试试下面这个镜像站
