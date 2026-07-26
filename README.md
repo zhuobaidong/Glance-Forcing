@@ -39,13 +39,33 @@ torchrun --nnodes=1 --nproc_per_node=8 --rdzv_id=5235 \
 ```
 
 ### Inference （for 俊超）
+#### 3k data training ode model evaluation
+```bash
+hf download zhuobai/Glance-Forcing 3k_sample_ode/slow_lora.pt --local-dir checkpoints
+hf download zhuobai/Glance-Forcing 3k_sample_ode/fast_lora.pt --local-dir checkpoints
+```
 ```bash
 python infer_glance.py \
   --config_path configs/causal_forcing_dmd_chunkwise.yaml \
-  --output_folder output/chunkwise \
+  --output_folder output/3k_sample_ode \
   --checkpoint_path checkpoints/chunkwise/ar_diffusion.pt \
-  --lora_path_1 logs/slow_lora.pt \
-  --lora_path_2 logs/fast_lora.pt \
+  --lora_path_1 checkpoints/3k_sample_ode/slow_lora.pt \
+  --lora_path_2 checkpoints/3k_sample_ode/fast_lora.pt \
+  --data_path prompts/demos.txt \
+  --steps 4
+```
+#### 1 data training ode model evaluation
+```bash
+hf download zhuobai/Glance-Forcing one_sample_ode/slow_lora.pt --local-dir checkpoints
+hf download zhuobai/Glance-Forcing one_sample_ode/fast_lora.pt --local-dir checkpoints
+```
+```bash
+python infer_glance.py \
+  --config_path configs/causal_forcing_dmd_chunkwise.yaml \
+  --output_folder output/one_sample_ode \
+  --checkpoint_path checkpoints/chunkwise/ar_diffusion.pt \
+  --lora_path_1 checkpoints/one_sample_ode/slow_lora.pt \
+  --lora_path_2 checkpoints/one_sample_ode/fast_lora.pt \
   --data_path prompts/demos.txt \
   --steps 4
 ```
