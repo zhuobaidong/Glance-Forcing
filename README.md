@@ -69,3 +69,18 @@ python infer_glance.py \
   --data_path prompts/demos.txt \
   --steps 4
 ```
+#### 1 data training dmd model evaluation
+```bash
+hf download zhuobai/Glance-Forcing one_sample_dmd/slow_lora.pt --local-dir checkpoints
+hf download zhuobai/Glance-Forcing one_sample_dmd/fast_lora.pt --local-dir checkpoints
+```
+```bash
+python infer_glance.py \
+  --config_path configs/causal_forcing_dmd_chunkwise.yaml \
+  --output_folder output/one_sample_ode \
+  --checkpoint_path checkpoints/chunkwise/ar_diffusion.pt \
+  --lora_path_1 checkpoints/one_sample_dmd/slow_lora.pt \
+  --lora_path_2 checkpoints/one_sample_dmd/fast_lora.pt \
+  --data_path prompts/demos.txt \
+  --steps 4
+```
