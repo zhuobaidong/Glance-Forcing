@@ -37,3 +37,15 @@ torchrun --nnodes=1 --nproc_per_node=8 --rdzv_id=5235 \
   --config_path configs/causal_forcing_dmd_chunkwise.yaml \
   --logdir logs/causal_forcing_dmd_chunkwise
 ```
+
+### Inference （for 俊超）
+```bash
+python inference.py \
+  --config_path configs/causal_forcing_dmd_chunkwise.yaml \
+  --output_folder output/chunkwise \
+  --checkpoint_path checkpoints/chunkwise/ar_diffusion.pt \
+  --lora_path_1 logs/slow_lora.pt \
+  --lora_path_2 logs/fast_lora.pt \
+  --data_path prompts/demos.txt \
+  --steps 4
+```
