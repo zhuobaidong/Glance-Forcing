@@ -40,7 +40,7 @@ torchrun --nnodes=1 --nproc_per_node=8 --rdzv_id=5235 \
 
 ### Inference （for 俊超）
 ```bash
-python inference.py \
+python infer_glance.py \
   --config_path configs/causal_forcing_dmd_chunkwise.yaml \
   --output_folder output/chunkwise \
   --checkpoint_path checkpoints/chunkwise/ar_diffusion.pt \
