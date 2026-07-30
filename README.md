@@ -38,6 +38,19 @@ torchrun --nnodes=1 --nproc_per_node=8 --rdzv_id=5235 \
   --logdir logs/causal_forcing_dmd_chunkwise
 ```
 
+### Inference （for yilin）
+把训练好的两个lora 路径换下即可
+```bash
+python infer_glance.py \
+  --config_path configs/causal_forcing_dmd_chunkwise.yaml \
+  --output_folder output/dmd \
+  --checkpoint_path checkpoints/chunkwise/ar_diffusion.pt \
+  --lora_path_1 checkpoints/dmd/slow_lora.pt \
+  --lora_path_2 checkpoints/dmd/fast_lora.pt \
+  --data_path prompts/demos.txt \
+  --steps 4
+```
+
 ### Inference （for 俊超）
 #### 3k data training ode model evaluation
 ```bash
