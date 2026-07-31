@@ -18,7 +18,7 @@ denoising_loss_type: flow
 mixed_precision: true
 seed: 0
 wandb_host: https://api.wandb.ai
-wandb_key: "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"
+wandb_key: ""
 wandb_entity: dzb1120-wuhan-university
 wandb_project: causal_glance_dmd
 wandb_name: slow_lora_dmd

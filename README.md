@@ -1,4 +1,21 @@
-### Installation
+# Glance-forcing-eval
+
+This branch includes the modified multi-GPU `infer_glance.py` and a complete six-metric evaluation workflow. No patch is required. See [evaluation/README.md](evaluation/README.md) for VBench and VisionReward clone commands, tested revisions, video generation, and score aggregation. Model weights, caches, videos, and results are excluded from Git.
+
+
+
+This repository is based on [zhuobaidong/Glance-Forcing](https://github.com/zhuobaidong/Glance-Forcing) commit `cc76a1d776751d4063a50614b9a40d558357171c`.
+
+## Included changes
+
+- Modified `infer_glance.py` with correct rank-local GPU placement.
+- Complete and non-overlapping distributed prompt partitioning.
+- Deterministic per-prompt seeds and collision-safe filenames.
+- 4-step and 8-step generation.
+- Six-metric evaluation code and prompts under `evaluation/`.
+
+## Installation
+
 ```bash
 conda create -n causal_forcing python=3.10 -y
 conda activate causal_forcing
@@ -7,80 +24,15 @@ pip install git+https://github.com/openai/CLIP.git
 pip install flash-attn --no-build-isolation
 python setup.py develop
 ```
-### Download Checkpoints
-```bash
-hf download Wan-AI/Wan2.1-T2V-1.3B  --local-dir wan_models/Wan2.1-T2V-1.3B
-hf download Wan-AI/Wan2.1-T2V-14B  --local-dir wan_models/Wan2.1-T2V-14B
-# base model
-hf download zhuhz22/Causal-Forcing chunkwise/ar_diffusion.pt --local-dir checkpoints
-# dataset
-hf download gdhe17/Self-Forcing vidprom_filtered_extended.txt --local-dir prompts
-# slow lora and fast lora
-wget https://huggingface.co/zhuobai/Glance-Forcing/resolve/main/fast_lora.pt
-wget https://huggingface.co/zhuobai/Glance-Forcing/resolve/main/slow_lora.pt
-```
 
-### 💡 如果下载速度较慢，可以试试下面这个镜像站
-```bash
-export HF_ENDPOINT=https://hf-mirror.com
-```
+## Evaluation
 
-### Training
+Follow [evaluation/README.md](evaluation/README.md). It contains the exact `git clone` commands and tested commits for VBench and VisionReward, an automatic model/cache downloader, the checkpoint layout, all generation/evaluation commands, and final six-score aggregation.
 
-首先把 trainer/distillation_lora.py 的 103 行附件换成真实的 lora 本地路径，然后运行下面的指令:
+## Excluded artifacts
 
-```bash
-torchrun --nnodes=1 --nproc_per_node=8 --rdzv_id=5235 \
-  --rdzv_backend=c10d \
-  --rdzv_endpoint localhost:29503 \
-  train.py \
-  --config_path configs/causal_forcing_dmd_chunkwise.yaml \
-  --logdir logs/causal_forcing_dmd_chunkwise
-```
+Model weights, VBench/VisionReward caches, Hugging Face caches, generated videos, JSONL shards and evaluation outputs are ignored by Git.
 
-### Inference （for 俊超）
-#### 3k data training ode model evaluation
-```bash
-hf download zhuobai/Glance-Forcing 3k_sample_ode/slow_lora.pt --local-dir checkpoints
-hf download zhuobai/Glance-Forcing 3k_sample_ode/fast_lora.pt --local-dir checkpoints
-```
-```bash
-python infer_glance.py \
-  --config_path configs/causal_forcing_dmd_chunkwise.yaml \
-  --output_folder output/3k_sample_ode \
-  --checkpoint_path checkpoints/chunkwise/ar_diffusion.pt \
-  --lora_path_1 checkpoints/3k_sample_ode/slow_lora.pt \
-  --lora_path_2 checkpoints/3k_sample_ode/fast_lora.pt \
-  --data_path prompts/demos.txt \
-  --steps 4
-```
-#### 1 data training ode model evaluation
-```bash
-hf download zhuobai/Glance-Forcing one_sample_ode/slow_lora.pt --local-dir checkpoints
-hf download zhuobai/Glance-Forcing one_sample_ode/fast_lora.pt --local-dir checkpoints
-```
-```bash
-python infer_glance.py \
-  --config_path configs/causal_forcing_dmd_chunkwise.yaml \
-  --output_folder output/one_sample_ode \
-  --checkpoint_path checkpoints/chunkwise/ar_diffusion.pt \
-  --lora_path_1 checkpoints/one_sample_ode/slow_lora.pt \
-  --lora_path_2 checkpoints/one_sample_ode/fast_lora.pt \
-  --data_path prompts/demos.txt \
-  --steps 4
-```
-#### 1 data training dmd model evaluation
-```bash
-hf download zhuobai/Glance-Forcing one_sample_dmd/slow_lora.pt --local-dir checkpoints
-hf download zhuobai/Glance-Forcing one_sample_dmd/fast_lora.pt --local-dir checkpoints
-```
-```bash
-python infer_glance.py \
-  --config_path configs/causal_forcing_dmd_chunkwise.yaml \
-  --output_folder output/one_sample_ode \
-  --checkpoint_path checkpoints/chunkwise/ar_diffusion.pt \
-  --lora_path_1 checkpoints/one_sample_dmd/slow_lora.pt \
-  --lora_path_2 checkpoints/one_sample_dmd/fast_lora.pt \
-  --data_path prompts/demos.txt \
-  --steps 4
-```
+## License
+
+Apache-2.0. See [LICENSE](LICENSE).

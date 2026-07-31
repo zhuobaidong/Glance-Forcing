@@ -1,5 +1,4 @@
 import argparse
-import argparse
 import torch
 import os
 from omegaconf import OmegaConf
@@ -8,8 +7,7 @@ from torchvision import transforms
 from torchvision.io import write_video
 from einops import rearrange
 import torch.distributed as dist
-from torch.utils.data import DataLoader, SequentialSampler
-from torch.utils.data.distributed import DistributedSampler
+from torch.utils.data import DataLoader, SequentialSampler, Subset
 import json
 
 from pipeline.slowfast_chunk import CausalInferencePipeline
@@ -20,7 +18,7 @@ from pipeline import (
 from utils.dataset import TextDataset, TextImagePairDataset
 from utils.misc import set_seed
 
-from demo_utils.memory import gpu, get_cuda_free_memory_gb, DynamicSwapInstaller
+from demo_utils.memory import get_cuda_free_memory_gb, DynamicSwapInstaller
 from peft import (
     LoraConfig,
     get_peft_model,
@@ -34,9 +32,24 @@ parser.add_argument("--lora_path_1", type=str, default="final_logs/glance_slow_o
 parser.add_argument("--lora_path_2", type=str, default="final_logs/glance_fast_ode/fast_continue/checkpoint_model_002000/model.pt")
 parser.add_argument("--data_path", type=str, default="prompts/evaluate.txt")
 parser.add_argument("--output_folder", type=str, default="output/0724/slow2fast2")
+parser.add_argument(
+    "--output_name_path",
+    type=str,
+    default=None,
+    help="Optional line-aligned file of collision-safe output filename stems",
+)
 parser.add_argument("--num_output_frames", type=int, default=21, help="Number of overlap frames between sliding windows")
 parser.add_argument("--use_ema", action="store_true", help="Whether to use EMA parameters")
 parser.add_argument("--seed", type=int, default=0, help="Random seed")
+parser.add_argument(
+    "--seed_by_prompt",
+    action="store_true",
+    help="Generate each prompt with seed + its original prompt index",
+)
+parser.add_argument(
+    "--sample_index", type=int, default=0,
+    help="Sample suffix used in output filenames",
+)
 parser.add_argument("--i2v", action="store_true", help="Whether to perform I2V (or T2V by default)")
 parser.add_argument("--report_timing", action="store_true",
                     help="Only tested on A800, for the Causal Forcing++ latency. Not make claims for other hardware like H100. For the result on H100, refer to the reported results in the Self Forcing paper.")
@@ -45,21 +58,23 @@ args = parser.parse_args()
 
 # Initialize distributed inference
 if "LOCAL_RANK" in os.environ:
-    dist.init_process_group(backend='nccl')
     local_rank = int(os.environ["LOCAL_RANK"])
     torch.cuda.set_device(local_rank)
     device = torch.device(f"cuda:{local_rank}")
+    dist.init_process_group(backend="nccl", device_id=device)
     world_size = dist.get_world_size()
+    global_rank = dist.get_rank()
     
 else:
     device = torch.device("cuda")
     local_rank = 0
     world_size = 1
+    global_rank = 0
 
 set_seed(args.seed)
 
-print(f'Free VRAM {get_cuda_free_memory_gb(gpu)} GB')
-low_memory = get_cuda_free_memory_gb(gpu) < 40
+print(f'Free VRAM on {device}: {get_cuda_free_memory_gb(device)} GB')
+low_memory = get_cuda_free_memory_gb(device) < 40
 
 torch.set_grad_enabled(False)
 
@@ -134,11 +149,11 @@ def switch_lora_by_step_callback(step_index):
 
 pipeline = pipeline.to(dtype=torch.bfloat16)
 if low_memory:
-    DynamicSwapInstaller.install_model(pipeline.text_encoder, device=gpu)
+    DynamicSwapInstaller.install_model(pipeline.text_encoder, device=device)
 else:
-    pipeline.text_encoder.to(device=gpu)
-pipeline.generator.to(device=gpu)
-pipeline.vae.to(device=gpu)
+    pipeline.text_encoder.to(device=device)
+pipeline.generator.to(device=device)
+pipeline.vae.to(device=device)
 
 # Create dataset
 if args.i2v:
@@ -154,15 +169,50 @@ else:
 num_prompts = len(dataset)
 print(f"Number of prompts: {num_prompts}")
 
+output_name_list = None
+if args.output_name_path is not None:
+    with open(args.output_name_path, encoding="utf-8") as f:
+        output_name_list = [line.rstrip("\n") for line in f]
+    if len(output_name_list) != num_prompts:
+        raise ValueError(
+            f"Output-name count ({len(output_name_list)}) does not match "
+            f"prompt count ({num_prompts})"
+        )
+    if len(set(output_name_list)) != len(output_name_list):
+        raise ValueError("Output names must be unique")
+    for output_name in output_name_list:
+        if (
+            not output_name
+            or output_name in {".", ".."}
+            or os.path.basename(output_name) != output_name
+        ):
+            raise ValueError(f"Unsafe output filename stem: {output_name!r}")
+
 if args.report_timing and num_prompts < 2:
     print(f"[WARN] --report_timing requires at least 2 prompts "
           f"(got {num_prompts}); timing disabled.")
     args.report_timing = False
 
 if dist.is_initialized():
-    sampler = DistributedSampler(dataset, shuffle=False, drop_last=True)
-else:
-    sampler = SequentialSampler(dataset)
+    if output_name_list is not None:
+        unique_indices = list(range(num_prompts))
+    else:
+        unique_indices = []
+        seen_prompts = set()
+        for dataset_idx, prompt in enumerate(dataset.prompt_list):
+            if prompt not in seen_prompts:
+                seen_prompts.add(prompt)
+                unique_indices.append(dataset_idx)
+    rank_indices = unique_indices[global_rank::world_size]
+    dataset = Subset(dataset, rank_indices)
+    if global_rank == 0:
+        print(
+            f"Distributed inference: {len(unique_indices)} unique prompts "
+            f"across {world_size} GPUs"
+        )
+    print(f"Rank {global_rank}: {len(rank_indices)} prompts")
+
+sampler = SequentialSampler(dataset)
 dataloader = DataLoader(dataset, batch_size=1, sampler=sampler, num_workers=0, drop_last=False)
 
 # Create output directory (only on main process to avoid race conditions)
@@ -170,7 +220,7 @@ if local_rank == 0:
     os.makedirs(args.output_folder, exist_ok=True)
 
 if dist.is_initialized():
-    dist.barrier()
+    dist.barrier(device_ids=[local_rank])
 
 def encode(self, videos: torch.Tensor) -> torch.Tensor:
     device, dtype = videos[0].device, videos[0].dtype
@@ -183,6 +233,31 @@ def encode(self, videos: torch.Tensor) -> torch.Tensor:
 
     output = torch.stack(output, dim=0)
     return output
+
+
+def get_output_path(prompt: str, prompt_idx: int) -> str:
+    if output_name_list is None:
+        # Preserve the repository's original demo/inference filename format.
+        return os.path.join(args.output_folder, f"{prompt[:100]}.mp4")
+
+    return os.path.join(
+        args.output_folder,
+        f"{output_name_list[prompt_idx]}-{args.sample_index}.mp4",
+    )
+
+
+def sample_noise(shape: list[int], prompt_idx: int) -> torch.Tensor:
+    generator = None
+    if args.seed_by_prompt:
+        generator = torch.Generator(device=device)
+        generator.manual_seed(args.seed + prompt_idx)
+    return torch.randn(
+        shape,
+        generator=generator,
+        device=device,
+        dtype=torch.bfloat16,
+    )
+
 
 for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
     idx = batch_data['idx'].item()
@@ -199,7 +274,7 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
         assert config.num_frame_per_block == 1, "Current I2V only supports the frame-wise model."
         # For image-to-video, batch contains image and caption
         prompt = batch['prompts'][0]  # Get caption from batch
-        output_path = os.path.join(args.output_folder, f'{prompt[:100]}.mp4')
+        output_path = get_output_path(prompt, idx)
         if os.path.exists(output_path):
             print('Video has been generated. Pass!')
             continue
@@ -209,13 +284,14 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
         # Encode the input image as the first latent
         initial_latent = pipeline.vae.encode_to_latent(image).to(device=device, dtype=torch.bfloat16)
         prompts = [prompt] 
-        sampled_noise = torch.randn(
-            [1, args.num_output_frames - 1, 16, 60, 104], device=device, dtype=torch.bfloat16
+        sampled_noise = sample_noise(
+            [1, args.num_output_frames - 1, 16, 60, 104],
+            idx,
         )
     else:
         # For text-to-video, batch is just the text prompt
         prompt = batch['prompts'][0]
-        output_path = os.path.join(args.output_folder, f'{prompt[:100]}.mp4')
+        output_path = get_output_path(prompt, idx)
         if os.path.exists(output_path):
             print('Video has been generated. Pass!')
             continue
@@ -226,8 +302,9 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
             prompts = [prompt] 
 
         initial_latent = None
-        sampled_noise = torch.randn(
-            [1, args.num_output_frames, 16, 60, 104], device=device, dtype=torch.bfloat16
+        sampled_noise = sample_noise(
+            [1, args.num_output_frames, 16, 60, 104],
+            idx,
         )
 
     sample_report_timing = args.report_timing and i >= 1
@@ -257,7 +334,6 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
     # Clear VAE cache
     pipeline.vae.model.clear_cache()
 
-    output_path = os.path.join(args.output_folder, f'{prompt[:100]}.mp4')
     write_video(output_path, video[0], fps=16)
 
        

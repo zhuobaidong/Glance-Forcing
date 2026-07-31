@@ -7,3 +7,21 @@ output
 dataset
 prompts/vidprom_filtered_extended.txt
 logs
+
+# Evaluation artifacts and local dependencies
+evaluation/output
+VBench/
+VisionReward/
+vbench_cache/
+huggingface/
+*.pt
+*.pth
+*.safetensors
+*.mp4
+*.zip
+*.jsonl
+*.log
+.env
+.DS_Store
+.idea/
+.vscode/
