@@ -1,3 +1,23 @@
+# Glance Forcing: One Sample Forcing Model
+
+Official PyTorch implementation of the paper:
+
+**Glance Forcing: Making Bidirectional Diffusion Autoregressive at a Glance**
+<br>
+In ECCV 2026
+<br>
+[Zhuobai Dong](https://zhuobaidong.github.io/)<sup>1</sup>, 
+[Junchao Yi](https://github.com/Junc1i)<sup>2</sup>,
+[Hu Jian Guo](https://ieeexplore.ieee.org/author/37536384400)<sup>3</sup>,
+[Linjie Li](https://scholar.google.com/citations?user=WR875gYAAAAJ&hl=en)<sup>4</sup>,
+[Alex Jinpeng Wang](https://fingerrec.github.io/)<sup>5</sup><br>
+[Rui Zhao](https://ruizhaocv.github.io/)<sup>6</sup>,
+<sup>1</sup>WuHan University, <sup>2</sup>University of Electronic Science and Technology of China, <sup>3</sup>Sun Yat-sen University, <sup>4</sup>University of Washington, <sup>5</sup>Central South University, <sup>6</sup>National University of Singapore
+<br>
+[ArXiv](https://arxiv.org/abs/2512.02899) | [Homepage](https://zhuobaidong.github.io/Glance/) | [Model🤗](https://huggingface.co/CSU-JPG/Glance) | [Demo](https://348d29f48ab953c1e8.gradio.live/)
+
+<img src="assets/teaser2.jpg" alt=""/>
+
 ### Installation
 ```bash
 conda create -n causal_forcing python=3.10 -y
