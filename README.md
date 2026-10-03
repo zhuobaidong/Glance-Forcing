@@ -19,10 +19,12 @@ Official PyTorch implementation of the paper:
 
 <img src="assets/teaser2.jpg" alt=""/>
 
+# Quick Start
+
 ### Installation
 ```bash
-conda create -n causal_forcing python=3.10 -y
-conda activate causal_forcing
+conda create -n glance_forcing python=3.10 -y
+conda activate glance_forcing
 pip install -r requirements.txt
 pip install git+https://github.com/openai/CLIP.git
 pip install flash-attn --no-build-isolation
