@@ -550,7 +550,7 @@
               <span class="link-block">
 
                 <a
-                  href="https://github.com/CSU-JPG/Glance"
+                  href="https://github.com/CSU-JPG/Glance-Forcing"
                   class="external-link button is-normal is-rounded is-dark"
                 >
 
@@ -961,145 +961,21 @@
 
   /*
    * ============================================================
-   * Utility:
-   * Check video extension
+   * Fixed video list
    * ============================================================
    */
 
-  function isVideoFile(filename) {
-
-    const lower = filename.toLowerCase();
-
-    return VIDEO_EXTENSIONS.some(
-      ext => lower.endsWith(ext)
-    );
-
-  }
-
-
-  /*
-   * ============================================================
-   * Utility:
-   * Remove path
-   * ============================================================
-   */
-
-  function getFilenameFromHref(href) {
-
-    try {
-
-      return decodeURIComponent(
-        href.split("/").pop()
-      );
-
-    } catch (error) {
-
-      return href.split("/").pop();
-
-    }
-
-  }
-
-
-  /*
-   * ============================================================
-   * Read directory listing
-   *
-   * This works when the static server exposes directory indexes.
-   * ============================================================
-   */
-
-  async function readDirectory(directory) {
-
-    const url =
-      VIDEO_ROOT +
-      encodeURIComponent(directory) +
-      "/";
-
-
-    const response =
-      await fetch(url);
-
-
-    if (!response.ok) {
-
-      throw new Error(
-        "Cannot access directory: " + url
-      );
-
-    }
-
-
-    const html =
-      await response.text();
-
-
-    /*
-     * Parse links from directory index
-     */
-
-    const parser =
-      new DOMParser();
-
-    const doc =
-      parser.parseFromString(
-        html,
-        "text/html"
-      );
-
-
-    const links =
-      Array.from(
-        doc.querySelectorAll("a")
-      );
-
-
-    const files = [];
-
-
-    links.forEach(link => {
-
-      const href =
-        link.getAttribute("href");
-
-      if (!href) {
-        return;
-      }
-
-
-      const filename =
-        getFilenameFromHref(href);
-
-
-      if (
-        filename &&
-        isVideoFile(filename)
-      ) {
-
-        files.push(filename);
-
-      }
-
-    });
-
-
-    /*
-     * Remove duplicate filenames
-     */
-
-    return [...new Set(files)].sort(
-      (a, b) =>
-        a.localeCompare(
-          b,
-          undefined,
-          {
-            numeric: true,
-            sensitivity: "base"
-          }
-        )
-    );
-
-  }
+  // The three model folders contain the same seven video files.
+  // We use a fixed list instead of trying to read server directory listings.
+  const VIDEO_FILES = [
+    "video1.mp4",
+    "video2.mp4",
+    "video3.mp4",
+    "video4.mp4",
+    "video5.mp4",
+    "video6.mp4",
+    "video7.mp4"
+  ];
 
 
   /*
@@ -1685,41 +1561,13 @@
     try {
 
       /*
-       * Read all three directories.
+       * Use the fixed list of seven videos.
+       *
+       * Each model directory is expected to contain:
+       * video1.mp4 ... video7.mp4
        */
 
-      const directoryFiles =
-        await Promise.all(
-          MODELS.map(
-            model =>
-              readDirectory(
-                model.directory
-              )
-          )
-        );
-
-
-      /*
-       * Find filenames common to all
-       * three model directories.
-       */
-
-      const commonFiles =
-        directoryFiles.reduce(
-          (
-            common,
-            current
-          ) => {
-
-            return common.filter(
-              filename =>
-                current.includes(
-                  filename
-                )
-            );
-
-          }
-        );
+      const commonFiles = [...VIDEO_FILES];
 
 
       /*
@@ -1855,25 +1703,25 @@
 
 
       /*
-       * Directory listing is probably disabled.
+       * Video loading failed.
        */
 
       container.innerHTML = `
         <div class="video-error">
 
-          Unable to automatically read the video directories.
+          Unable to load the video files.
 
           <br><br>
 
-          Please make sure your server allows directory
-          listing, or use a videos.json manifest.
+          Please check that all three video folders contain
+          video1.mp4 through video7.mp4.
 
         </div>
       `;
 
 
       status.textContent =
-        "Unable to load video directory.";
+        "Unable to load video files.";
 
     }
 
