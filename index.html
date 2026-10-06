@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="description" content="Glance Forcing: Making Bidirectional Diffusion Autoregressive at a Glance">
+
+  <meta property="og:title"
+        content="Glance Forcing: Making Bidirectional Diffusion Autoregressive at a Glance">
+  <meta property="og:description"
+        content="Glance Forcing: Making Bidirectional Diffusion Autoregressive at a Glance">
+  <meta property="og:url" content="">
+
+  <meta name="twitter:title"
+        content="Glance Forcing: Making Bidirectional Diffusion Autoregressive at a Glance">
+  <meta name="twitter:description"
+        content="Glance Forcing: Making Bidirectional Diffusion Autoregressive at a Glance">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>
+    Glance Forcing: Making Bidirectional Diffusion Autoregressive at a Glance
+  </title>
+
+  <!-- =========================
+       Existing CSS
+  ========================== -->
+
+  <link href="./static/css/css" rel="stylesheet">
+
+  <link rel="stylesheet"
+        href="./static/css/bulma.min.css">
+
+  <link rel="stylesheet"
+        href="./static/css/bulma-carousel.min.css">
+
+  <link rel="stylesheet"
+        href="./static/css/bulma-slider.min.css">
+
+  <link rel="stylesheet"
+        href="./static/css/fontawesome.all.min.css">
+
+  <link rel="stylesheet"
+        href="./static/css/academicons.min.css">
+
+  <link rel="stylesheet"
+        href="./static/css/index.css">
+
+  <link rel="stylesheet"
+        href="./static/css/others.css">
+
+
+  <!-- =========================
+       Existing JS
+  ========================== -->
+
+  <script src="./static/js/jquery.min.js"></script>
+  <script src="./static/js/main.js"></script>
+  <script src="./static/js/ViewSDKInterface.js"></script>
+
+  <script defer
+          src="./static/js/fontawesome.all.min.js"></script>
+
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+
+
+  <!-- =========================================================
+       Custom CSS
+  ========================================================== -->
+
+  <style>
+
+    /* ---------------------------------------------------------
+       Existing title styles
+    --------------------------------------------------------- */
+
+    .title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 30px;
+      margin-bottom: 10px;
+    }
+
+    .fancy-title {
+      font-size: 36px;
+      font-weight: 700;
+    }
+
+
+    /* ---------------------------------------------------------
+       Video Comparison Section
+    --------------------------------------------------------- */
+
+    .video-comparison-section {
+      padding-top: 3rem;
+      padding-bottom: 3rem;
+      background: #ffffff;
+    }
+
+
+    .video-comparison-container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+
+    .video-comparison-title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      color: #222;
+    }
+
+
+    .video-comparison-description {
+      text-align: center;
+      color: #666;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+
+    /* ---------------------------------------------------------
+       Model Header
+    --------------------------------------------------------- */
+
+    .model-header-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 12px;
+    }
+
+
+    .model-header {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 10px 8px;
+
+      border-radius: 8px;
+
+      background: #f5f5f5;
+      color: #333;
+    }
+
+
+    .model-header.glance {
+      background: #eeeeee;
+      color: #111;
+    }
+
+
+    /* ---------------------------------------------------------
+       Each Sample
+    --------------------------------------------------------- */
+
+    .video-sample {
+      margin-bottom: 28px;
+    }
+
+
+    .sample-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #555;
+
+      margin-bottom: 8px;
+      padding-left: 2px;
+    }
+
+
+    /* ---------------------------------------------------------
+       Video Grid
+    --------------------------------------------------------- */
+
+    .video-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+
+      width: 100%;
+    }
+
+
+    .video-cell {
+      width: 100%;
+      min-width: 0;
+    }
+
+
+    .video-wrapper {
+      position: relative;
+
+      width: 100%;
+      background: #000;
+
+      border-radius: 8px;
+      overflow: hidden;
+
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.10);
+
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+
+    .video-wrapper:hover {
+      transform: translateY(-2px);
+
+      box-shadow:
+        0 5px 16px rgba(0, 0, 0, 0.16);
+    }
+
+
+    .video-wrapper video {
+      display: block;
+
+      width: 100%;
+      height: auto;
+
+      aspect-ratio: 16 / 9;
+
+      object-fit: contain;
+
+      background: #000;
+
+      cursor: pointer;
+    }
+
+
+    /* ---------------------------------------------------------
+       Loading
+    --------------------------------------------------------- */
+
+    .video-loading {
+      width: 100%;
+
+      aspect-ratio: 16 / 9;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #f3f3f3;
+
+      color: #888;
+
+      font-size: 0.9rem;
+    }
+
+
+    /* ---------------------------------------------------------
+       Error message
+    --------------------------------------------------------- */
+
+    .video-error {
+      width: 100%;
+
+      aspect-ratio: 16 / 9;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      text-align: center;
+
+      padding: 15px;
+
+      background: #f5f5f5;
+
+      color: #999;
+
+      font-size: 0.85rem;
+    }
+
+
+    /* ---------------------------------------------------------
+       Sync indicator
+    --------------------------------------------------------- */
+
+    .sync-status {
+      text-align: center;
+
+      font-size: 0.85rem;
+
+      color: #888;
+
+      margin-top: 20px;
+    }
+
+
+    .sync-status.active {
+      color: #555;
+    }
+
+
+    /* ---------------------------------------------------------
+       Mobile
+    --------------------------------------------------------- */
+
+    @media screen and (max-width: 900px) {
+
+      .video-comparison-container {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .model-header-row,
+      .video-row {
+        grid-template-columns: 1fr;
+      }
+
+      .model-header {
+        display: none;
+      }
+
+      .video-sample {
+        margin-bottom: 40px;
+      }
+
+    }
+
+
+    @media screen and (min-width: 901px) and (max-width: 1100px) {
+
+      .video-comparison-container {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .video-row {
+        gap: 12px;
+      }
+
+    }
+
+
+    /* ---------------------------------------------------------
+       Divider
+    --------------------------------------------------------- */
+
+    .video-divider {
+      border: none;
+
+      border-top: 1px solid #ddd;
+
+      margin:
+        2.5rem auto
+        2.5rem auto;
+
+      max-width: 1200px;
+    }
+
+
+    /* ---------------------------------------------------------
+       Controls
+    --------------------------------------------------------- */
+
+    .video-control-info {
+      text-align: center;
+
+      margin-top: 8px;
+
+      font-size: 0.78rem;
+
+      color: #aaa;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     HERO
+========================================================== -->
+
+<section class="hero">
+
+  <div class="hero-body">
+
+    <div class="container is-max-desktop is-max-mobile">
+
+      <div class="columns is-centered">
+
+        <div class="column has-text-centered">
+
+
+          <!-- Title -->
+
+          <h1
+            class="title is-1 publication-title"
+            style="
+              font-size: 30pt;
+              line-height: 1.2;
+              color: #000000;
+              font-weight: 700;
+            "
+          >
+            Glance Forcing: Making Bidirectional Diffusion
+            Autoregressive at a Glance
+          </h1>
+
+
+          <!-- Authors -->
+
+          <div class="is-size-5 publication-authors">
+
+            <span class="author-block">
+              <a href="https://zhuobaidong.github.io/"
+                 target="_blank">
+                Zhuobai Dong
+              </a><sup>1</sup>,
+            </span>
+
+            <span class="author-block">
+              <a href="https://github.com/Junc1i"
+                 target="_blank">
+                Junchao Yi
+              </a><sup>2</sup>,
+            </span>
+
+            <span class="author-block">
+              <a
+                href="https://ieeexplore.ieee.org/author/37536384400"
+                target="_blank">
+                Hu Jian Guo
+              </a><sup>3</sup>,
+            </span>
+
+            <span class="author-block">
+              <a
+                href="https://scholar.google.com/citations?user=WR875gYAAAAJ&hl=en"
+                target="_blank">
+                Linjie Li
+              </a><sup>4</sup>,
+            </span>
+
+            <span class="author-block">
+              <a
+                href="https://fingerrec.github.io/"
+                target="_blank">
+                Alex Jinpeng Wang
+              </a><sup>5</sup>,
+            </span>
+
+            <span class="author-block">
+              <a
+                href="https://ruizhaocv.github.io/"
+                target="_blank">
+                Rui Zhao
+              </a><sup>6 &dagger;</sup>
+            </span>
+
+          </div>
+
+
+          <!-- Affiliations -->
+
+          <div class="is-size-5 publication-authors">
+
+            <span class="author-block">
+
+              <sup>1</sup>WuHan University,
+              &nbsp;&nbsp;
+
+              <sup>2</sup>University of Electronic Science
+              and Technology of China,
+              &nbsp;&nbsp;
+
+              <sup>3</sup>Sun Yat-sen University,
+
+              <br>
+
+              <sup>4</sup>University of Washington,
+              &nbsp;&nbsp;
+
+              <sup>5</sup>Central South University,
+              &nbsp;&nbsp;
+
+              <sup>6</sup>National University of Singapore
+
+            </span>
+
+
+            <span class="eql-cntrb">
+
+              <small>
+                <br>
+                <sup>&dagger;</sup>
+                Corresponding author
+              </small>
+
+            </span>
+
+          </div>
+
+
+          &nbsp;
+
+
+          <!-- Links -->
+
+          <div class="column has-text-centered">
+
+            <div class="publication-links">
+
+
+              <!-- Paper -->
+
+              <span class="link-block">
+
+                <a
+                  href="https://arxiv.org/abs/2512.02899"
+                  class="external-link button is-normal is-rounded is-dark"
+                >
+
+                  <span class="icon">
+
+                    <i class="fas fa-file-pdf"></i>
+
+                  </span>
+
+                  <span>
+                    Paper
+                  </span>
+
+                </a>
+
+              </span>
+
+
+              &nbsp;
+
+
+              <!-- Github -->
+
+              <span class="link-block">
+
+                <a
+                  href="https://github.com/CSU-JPG/Glance"
+                  class="external-link button is-normal is-rounded is-dark"
+                >
+
+                  <span class="icon">
+
+                    <i class="fab fa-github"></i>
+
+                  </span>
+
+                  <span>
+                    Code
+                  </span>
+
+                </a>
+
+              </span>
+
+
+              &nbsp;
+
+
+              <!-- Hugging Face -->
+
+              <span class="link-block">
+
+                <a
+                  href="https://huggingface.co/CSU-JPG/Glance"
+                  class="external-link button is-normal is-rounded is-dark"
+                >
+
+                  <span class="icon">
+
+                    <img
+                      src="static/images/huggingface.png"
+                      alt="Hugging Face"
+                      style="
+                        height: 1em;
+                        vertical-align: middle;
+                      "
+                    >
+
+                  </span>
+
+                  <span>
+                    Model
+                  </span>
+
+                </a>
+
+              </span>
+
+
+            </div>
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     TEASER
+========================================================== -->
+
+<section class="hero teaser">
+
+  <div class="container is-max-desktop">
+
+    <div class="hero-body">
+
+      <figure class="image-container">
+
+        <div
+          class="zoomcaption"
+          style="color: #000000;"
+        >
+          Click to zoom in
+        </div>
+
+        <img
+          class="clickable-image"
+          src="./static/images/teaser.jpg"
+          style="
+            width:100%;
+            max-width:1000px;
+          "
+        >
+
+        <figcaption>
+
+          <br>
+
+          <b>
+            Overall framework of our Glance Forcing and
+            the comparison with existing methods.
+          </b>
+
+          (a) Causal Forcing (CF) fixes Self Forcing
+          (SF)'s architecture gap but remains costly;
+          our Glance Forcing (GF) is efficient, and superior.
+
+          (b) Our GF reduces training cost by 11600×,
+          requires only 1 extra sample curation,
+          and achieves higher VBench scores than CF.
+
+        </figcaption>
+
+      </figure>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     SYNCHRONIZED VIDEO COMPARISON
+========================================================== -->
+
+<section class="video-comparison-section">
+
+  <div class="video-comparison-container">
+
+
+    <!-- Section title -->
+
+    <h2 class="video-comparison-title">
+      Qualitative Comparison
+    </h2>
+
+
+    <p class="video-comparison-description">
+      Synchronized video comparison across different methods
+    </p>
+
+
+    <!-- Model names -->
+
+    <div class="model-header-row">
+
+      <div class="model-header">
+        Self Forcing
+      </div>
+
+      <div class="model-header">
+        Causal Forcing
+      </div>
+
+      <div class="model-header glance">
+        Glance Forcing
+      </div>
+
+    </div>
+
+
+    <!-- Videos will be inserted here -->
+
+    <div id="video-comparison-list">
+
+      <div class="video-loading">
+        Loading videos...
+      </div>
+
+    </div>
+
+
+    <!-- Synchronization status -->
+
+    <div
+      id="sync-status"
+      class="sync-status"
+    >
+      Loading video comparison...
+    </div>
+
+
+    <div class="video-control-info">
+
+      All videos are synchronized in playback,
+      seeking, and pause/play actions.
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     BIBTEX
+========================================================== -->
+
+<section
+  class="section hero is-light"
+  style="
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  "
+>
+
+  <div class="container">
+
+    <div class="columns is-centered">
+
+      <div class="column is-full">
+
+        <div class="content has-text-centered">
+
+          <h2 class="title is-4">
+            BibTeX
+          </h2>
+
+
+          <div
+            class="bibtex-container"
+            style="
+              background-color: #f5f5f5;
+              padding: 1.5rem;
+              border-radius: 8px;
+              display: inline-block;
+              text-align: left;
+              font-size: 1rem;
+              overflow-x: auto;
+              width: 100%;
+              max-width: 800px;
+              margin: 0 auto;
+            "
+          >
+
+<pre
+  id="bibtex-content"
+  class="is-family-monospace"
+  style="margin: 0;"
+>@misc{dong2025glanceacceleratingdiffusionmodels,
+  title={Glance: Accelerating Diffusion Models with 1 Sample},
+  author={Zhuobai Dong and Rui Zhao and Songjie Wu and Junchao Yi and Linjie Li and Zhengyuan Yang and Lijuan Wang and Alex Jinpeng Wang},
+  year={2025},
+  eprint={2512.02899},
+  archivePrefix={arXiv},
+  primaryClass={cs.CV},
+  url={https://arxiv.org/abs/2512.02899},
+}</pre>
+
+
+            <button
+              onclick="copyBibtex()"
+              style="
+                margin-top: 1rem;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.875rem;
+              "
+            >
+              Copy
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     FOOTER
+========================================================== -->
+
+<footer class="footer">
+
+  <div class="container">
+
+    <div class="columns is-centered">
+
+      <div class="column is-8">
+
+        <div class="content">
+
+          <p>
+
+            This page was built using the
+            <a
+              href="https://github.com/eliahuhorwitz/Academic-project-page-template"
+              target="_blank"
+            >
+              Academic Project Page Template
+            </a>
+
+            which was adopted from the
+            <a
+              href="https://nerfies.github.io/"
+              target="_blank"
+            >
+              Nerfies
+            </a>
+            project page.
+
+            You are free to borrow the source code,
+            we just ask that you link back to this page
+            in the footer.
+
+            <br>
+
+            This website is licensed under the
+            <a
+              rel="license"
+              href="http://creativecommons.org/licenses/by-sa/4.0/"
+              target="_blank"
+            >
+              Creative Commons Attribution-ShareAlike
+              4.0 International License
+            </a>.
+
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</footer>
+
+
+
+<!-- =========================================================
+     VIDEO SYNCHRONIZATION JAVASCRIPT
+========================================================== -->
+
+<script>
+
+  /*
+   * ============================================================
+   * Configuration
+   * ============================================================
+   */
+
+  const VIDEO_ROOT = "./static/videos/";
+
+  const MODELS = [
+    {
+      name: "Self Forcing",
+      directory: "Self Forcing"
+    },
+    {
+      name: "Causal Forcing",
+      directory: "Causal Forcing"
+    },
+    {
+      name: "Glance Forcing",
+      directory: "Glance Forcing"
+    }
+  ];
+
+
+  /*
+   * ============================================================
+   * Supported video extensions
+   * ============================================================
+   */
+
+  const VIDEO_EXTENSIONS = [
+    ".mp4",
+    ".webm",
+    ".mov",
+    ".m4v"
+  ];
+
+
+  /*
+   * ============================================================
+   * Global video state
+   * ============================================================
+   */
+
+  let allVideos = [];
+
+  let isSyncing = false;
+
+  let isSeeking = false;
+
+  let masterVideo = null;
+
+
+  /*
+   * ============================================================
+   * Utility:
+   * Check video extension
+   * ============================================================
+   */
+
+  function isVideoFile(filename) {
+
+    const lower = filename.toLowerCase();
+
+    return VIDEO_EXTENSIONS.some(
+      ext => lower.endsWith(ext)
+    );
+
+  }
+
+
+  /*
+   * ============================================================
+   * Utility:
+   * Remove path
+   * ============================================================
+   */
+
+  function getFilenameFromHref(href) {
+
+    try {
+
+      return decodeURIComponent(
+        href.split("/").pop()
+      );
+
+    } catch (error) {
+
+      return href.split("/").pop();
+
+    }
+
+  }
+
+
+  /*
+   * ============================================================
+   * Read directory listing
+   *
+   * This works when the static server exposes directory indexes.
+   * ============================================================
+   */
+
+  async function readDirectory(directory) {
+
+    const url =
+      VIDEO_ROOT +
+      encodeURIComponent(directory) +
+      "/";
+
+
+    const response =
+      await fetch(url);
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        "Cannot access directory: " + url
+      );
+
+    }
+
+
+    const html =
+      await response.text();
+
+
+    /*
+     * Parse links from directory index
+     */
+
+    const parser =
+      new DOMParser();
+
+    const doc =
+      parser.parseFromString(
+        html,
+        "text/html"
+      );
+
+
+    const links =
+      Array.from(
+        doc.querySelectorAll("a")
+      );
+
+
+    const files = [];
+
+
+    links.forEach(link => {
+
+      const href =
+        link.getAttribute("href");
+
+      if (!href) {
+        return;
+      }
+
+
+      const filename =
+        getFilenameFromHref(href);
+
+
+      if (
+        filename &&
+        isVideoFile(filename)
+      ) {
+
+        files.push(filename);
+
+      }
+
+    });
+
+
+    /*
+     * Remove duplicate filenames
+     */
+
+    return [...new Set(files)].sort(
+      (a, b) =>
+        a.localeCompare(
+          b,
+          undefined,
+          {
+            numeric: true,
+            sensitivity: "base"
+          }
+        )
+    );
+
+  }
+
+
+  /*
+   * ============================================================
+   * Build video URL
+   * ============================================================
+   */
+
+  function getVideoURL(modelDirectory, filename) {
+
+    return (
+      VIDEO_ROOT +
+      encodeURIComponent(modelDirectory) +
+      "/" +
+      encodeURIComponent(filename)
+    );
+
+  }
+
+
+  /*
+   * ============================================================
+   * Create one video element
+   * ============================================================
+   */
+
+  function createVideoElement(
+    model,
+    filename
+  ) {
+
+    const wrapper =
+      document.createElement("div");
+
+    wrapper.className =
+      "video-wrapper";
+
+
+    const video =
+      document.createElement("video");
+
+
+    video.src =
+      getVideoURL(
+        model.directory,
+        filename
+      );
+
+
+    video.controls = true;
+
+    video.preload = "auto";
+
+    video.playsInline = true;
+
+    video.setAttribute(
+      "webkit-playsinline",
+      ""
+    );
+
+    video.autoplay = true;
+
+    video.muted = true;
+
+    video.loop = true;  
+
+
+    /*
+     * Store metadata
+     */
+
+    video.dataset.model =
+      model.name;
+
+    video.dataset.filename =
+      filename;
+
+
+    wrapper.appendChild(video);
+
+
+    return {
+      wrapper,
+      video
+    };
+
+  }
+
+
+  /*
+   * ============================================================
+   * Synchronize PLAY / PAUSE
+   * ============================================================
+   */
+
+  function synchronizePlayPause(
+    sourceVideo
+  ) {
+
+    if (isSyncing) {
+      return;
+    }
+
+
+    isSyncing = true;
+
+
+    allVideos.forEach(video => {
+
+      if (video === sourceVideo) {
+        return;
+      }
+
+
+      try {
+
+        if (sourceVideo.paused) {
+
+          video.pause();
+
+        } else {
+
+          const promise =
+            video.play();
+
+
+          if (
+            promise !== undefined
+          ) {
+
+            promise.catch(
+              () => {}
+            );
+
+          }
+
+        }
+
+      } catch (error) {
+
+        console.warn(
+          "Video sync error:",
+          error
+        );
+
+      }
+
+    });
+
+
+    setTimeout(
+      () => {
+        isSyncing = false;
+      },
+      50
+    );
+
+  }
+
+
+  /*
+   * ============================================================
+   * Synchronize SEEK
+   * ============================================================
+   */
+
+  function synchronizeSeek(
+    sourceVideo
+  ) {
+
+    if (isSyncing) {
+      return;
+    }
+
+
+    isSyncing = true;
+
+
+    const currentTime =
+      sourceVideo.currentTime;
+
+
+    allVideos.forEach(video => {
+
+      if (video === sourceVideo) {
+        return;
+      }
+
+
+      try {
+
+        video.currentTime =
+          currentTime;
+
+      } catch (error) {
+
+        console.warn(
+          "Seek sync error:",
+          error
+        );
+
+      }
+
+    });
+
+
+    setTimeout(
+      () => {
+        isSyncing = false;
+      },
+      50
+    );
+
+  }
+
+
+  /*
+   * ============================================================
+   * Synchronize playback continuously
+   *
+   * This keeps videos aligned even when their decoding
+   * speed is slightly different.
+   * ============================================================
+   */
+
+  function synchronizeTime(
+    sourceVideo
+  ) {
+
+    if (
+      isSyncing ||
+      isSeeking
+    ) {
+      return;
+    }
+
+
+    const sourceTime =
+      sourceVideo.currentTime;
+
+
+    allVideos.forEach(video => {
+
+      if (video === sourceVideo) {
+        return;
+      }
+
+
+      const difference =
+        Math.abs(
+          video.currentTime -
+          sourceTime
+        );
+
+
+      /*
+       * Only correct when the difference
+       * becomes noticeable.
+       */
+
+      if (difference > 0.08) {
+
+        try {
+
+          video.currentTime =
+            sourceTime;
+
+        } catch (error) {
+
+          // Ignore synchronization errors
+
+        }
+
+      }
+
+    });
+
+  }
+
+
+  /*
+   * ============================================================
+   * Attach synchronization events
+   * ============================================================
+   */
+
+  function attachVideoEvents(
+    video
+  ) {
+
+    /*
+     * Play
+     */
+
+    video.addEventListener(
+      "play",
+      () => {
+
+        masterVideo = video;
+
+        synchronizePlayPause(
+          video
+        );
+
+        updateSyncStatus();
+
+      }
+    );
+
+
+    /*
+     * Pause
+     */
+
+    video.addEventListener(
+      "pause",
+      () => {
+
+        synchronizePlayPause(
+          video
+        );
+
+        updateSyncStatus();
+
+      }
+    );
+
+
+    /*
+     * Seeking begins
+     */
+
+    video.addEventListener(
+      "seeking",
+      () => {
+
+        isSeeking = true;
+
+      }
+    );
+
+
+    /*
+     * Seeking ends
+     */
+
+    video.addEventListener(
+      "seeked",
+      () => {
+
+        isSeeking = false;
+
+        synchronizeSeek(
+          video
+        );
+
+      }
+    );
+
+
+    /*
+     * Time update
+     */
+
+    video.addEventListener(
+      "timeupdate",
+      () => {
+
+        synchronizeTime(
+          video
+        );
+
+      }
+    );
+
+
+    /*
+     * When one video ends, pause all videos.
+     */
+
+    video.addEventListener(
+      "ended",
+      () => {
+
+        allVideos.forEach(
+          otherVideo => {
+
+            if (
+              otherVideo !== video
+            ) {
+
+              otherVideo.pause();
+
+            }
+
+          }
+        );
+
+        updateSyncStatus();
+
+      }
+    );
+
+  }
+
+
+  /*
+   * ============================================================
+   * Update status
+   * ============================================================
+   */
+
+  function updateSyncStatus() {
+
+    const status =
+      document.getElementById(
+        "sync-status"
+      );
+
+
+    if (!status) {
+      return;
+    }
+
+
+    if (
+      masterVideo &&
+      !masterVideo.paused
+    ) {
+
+      status.textContent =
+        "Playing";
+
+      status.classList.add(
+        "active"
+      );
+
+    } else {
+
+      status.textContent =
+        "Paused — click any video to play all videos";
+
+      status.classList.remove(
+        "active"
+      );
+
+    }
+
+  }
+
+
+  /*
+   * ============================================================
+   * Create sample row
+   * ============================================================
+   */
+
+  function createSampleRow(
+    filename,
+    index
+  ) {
+
+    const sample =
+      document.createElement("div");
+
+    sample.className =
+      "video-sample";
+
+
+    /*
+     * Sample title
+     */
+
+    const title =
+      document.createElement("div");
+
+    title.className =
+      "sample-title";
+
+    title.textContent =
+      "Sample " + (index + 1);
+
+
+    sample.appendChild(
+      title
+    );
+
+
+    /*
+     * Three-column video row
+     */
+
+    const row =
+      document.createElement("div");
+
+    row.className =
+      "video-row";
+
+
+    MODELS.forEach(
+      model => {
+
+        const cell =
+          document.createElement(
+            "div"
+          );
+
+        cell.className =
+          "video-cell";
+
+
+        const {
+          wrapper,
+          video
+        } =
+          createVideoElement(
+            model,
+            filename
+          );
+
+
+        cell.appendChild(
+          wrapper
+        );
+
+
+        row.appendChild(
+          cell
+        );
+
+
+        /*
+         * Add to global list
+         */
+
+        allVideos.push(
+          video
+        );
+
+
+        /*
+         * Add synchronization
+         */
+
+        attachVideoEvents(
+          video
+        );
+
+      }
+    );
+
+
+    sample.appendChild(
+      row
+    );
+
+
+    return sample;
+
+  }
+
+
+  /*
+   * ============================================================
+   * Main loading function
+   * ============================================================
+   */
+
+  async function loadVideoComparison() {
+
+    const container =
+      document.getElementById(
+        "video-comparison-list"
+      );
+
+
+    const status =
+      document.getElementById(
+        "sync-status"
+      );
+
+
+    try {
+
+      /*
+       * Read all three directories.
+       */
+
+      const directoryFiles =
+        await Promise.all(
+          MODELS.map(
+            model =>
+              readDirectory(
+                model.directory
+              )
+          )
+        );
+
+
+      /*
+       * Find filenames common to all
+       * three model directories.
+       */
+
+      const commonFiles =
+        directoryFiles.reduce(
+          (
+            common,
+            current
+          ) => {
+
+            return common.filter(
+              filename =>
+                current.includes(
+                  filename
+                )
+            );
+
+          }
+        );
+
+
+      /*
+       * Sort samples naturally.
+       */
+
+      commonFiles.sort(
+        (
+          a,
+          b
+        ) =>
+          a.localeCompare(
+            b,
+            undefined,
+            {
+              numeric: true,
+              sensitivity: "base"
+            }
+          )
+      );
+
+
+      /*
+       * Clear loading message.
+       */
+
+      container.innerHTML = "";
+
+
+      /*
+       * No videos found.
+       */
+
+      if (
+        commonFiles.length === 0
+      ) {
+
+        container.innerHTML = `
+          <div class="video-error">
+            No matching videos were found.
+            <br>
+            Please check that the three folders contain
+            videos with the same filenames.
+          </div>
+        `;
+
+        status.textContent =
+          "No matching videos found.";
+
+        return;
+
+      }
+
+
+      /*
+       * Create every sample.
+       */
+
+      commonFiles.forEach(
+        (
+          filename,
+          index
+        ) => {
+
+          const sample =
+            createSampleRow(
+              filename,
+              index
+            );
+
+
+          container.appendChild(
+            sample
+          );
+
+        }
+      );
+
+
+      /*
+       * Update status.
+       */
+
+      status.textContent =
+        commonFiles.length +
+        " samples loaded — click any video to play all videos simultaneously.";
+
+      /*
+        * Update status.
+        */
+
+      status.textContent =
+        commonFiles.length +
+        " samples loaded — videos are playing automatically.";
+
+
+        /*
+        * Automatically start all videos.
+        */
+
+      setTimeout(() => {
+
+      allVideos.forEach(video => {
+
+        video.muted = true;
+
+        const promise = video.play();
+
+        if (promise !== undefined) {
+
+        promise.catch(error => {
+
+            console.warn(
+            "Autoplay was blocked:",
+            error
+            );
+
+        });
+
+        }
+
+      });
+
+      }, 300);
+
+
+    } catch (error) {
+
+      console.error(
+        "Failed to load videos:",
+        error
+      );
+
+
+      /*
+       * Directory listing is probably disabled.
+       */
+
+      container.innerHTML = `
+        <div class="video-error">
+
+          Unable to automatically read the video directories.
+
+          <br><br>
+
+          Please make sure your server allows directory
+          listing, or use a videos.json manifest.
+
+        </div>
+      `;
+
+
+      status.textContent =
+        "Unable to load video directory.";
+
+    }
+
+  }
+
+
+  /*
+   * ============================================================
+   * Start
+   * ============================================================
+   */
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+      loadVideoComparison();
+
+    }
+  );
+
+
+  /*
+   * ============================================================
+   * BibTeX
+   * ============================================================
+   */
+
+  function copyBibtex() {
+
+    const bibtex =
+      document.getElementById(
+        "bibtex-content"
+      ).innerText;
+
+
+    navigator.clipboard
+      .writeText(
+        bibtex
+      )
+      .then(
+        () => {
+
+          alert(
+            "BibTeX copied to clipboard!"
+          );
+
+        }
+      );
+
+  }
+
+</script>
+
+
+</body>
+
+</html>
