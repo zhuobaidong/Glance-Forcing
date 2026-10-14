@@ -450,18 +450,18 @@
 
             <span class="author-block">
               <a
-                href="https://fingerrec.github.io/"
+                href="https://ruizhaocv.github.io/"
                 target="_blank">
-                Alex Jinpeng Wang
-              </a><sup>5</sup>,
+                Rui Zhao
+              </a><sup>5 &dagger;</sup>
             </span>
 
             <span class="author-block">
               <a
-                href="https://ruizhaocv.github.io/"
+                href="https://fingerrec.github.io/"
                 target="_blank">
-                Rui Zhao
-              </a><sup>6 &dagger;</sup>
+                Alex Jinpeng Wang
+              </a><sup>6</sup>,
             </span>
 
           </div>
@@ -487,10 +487,10 @@
               <sup>4</sup>University of Washington,
               &nbsp;&nbsp;
 
-              <sup>5</sup>Central South University,
+              <sup>5</sup>National University of Singapore,
               &nbsp;&nbsp;
 
-              <sup>6</sup>National University of Singapore
+              <sup>6</sup>Central South University
 
             </span>
 
@@ -577,7 +577,7 @@
               <span class="link-block">
 
                 <a
-                  href="https://huggingface.co/CSU-JPG/Glance"
+                  href="https://huggingface.co/CSU-JPG/Glance-Forcing"
                   class="external-link button is-normal is-rounded is-dark"
                 >
 
@@ -742,6 +742,56 @@
 
       All videos are synchronized in playback,
       seeking, and pause/play actions.
+
+    </div>
+
+  </div>
+
+</section>
+
+<section class="hero teaser">
+
+  <div class="container is-max-desktop">
+
+    <div class="hero-body">
+
+      <figure class="image-container">
+
+        <div
+          class="zoomcaption"
+          style="color: #000000;"
+        >
+          Previous Work: Glance (ECCV 2026)
+        </div>
+
+        <img
+          class="clickable-image"
+          src="./static/images/Contranst.png"
+          style="
+            width:60%;
+            max-width:1000px;
+          "
+        >
+
+        <figcaption>
+
+          <br>
+
+          <b>
+            Our previous work:
+          <a href="https://zhuobaidong.github.io/Glance/"
+            target="_blank"
+            rel="noopener noreferrer">
+            Glance: Accelerating Diffusion Models with 1 Sample.
+          </a>
+          </b>
+
+          Glance requires only one training sample to obtain Slow-LoRA and Fast-LoRA, 
+          providing plug-and-play acceleration of the base image generation model.
+
+        </figcaption>
+
+      </figure>
 
     </div>
 
@@ -1462,7 +1512,22 @@
     sample.appendChild(
       title
     );
+    
+    title.className = "sample-title";
 
+    const descriptions = [
+      "Human motion: Inaccurate finger anatomy and violin-playing motions.",
+      "Prompt adherence: Incorrect lighting and chaotic movements near the end.",
+      "Physical consistency: Opposing train and steam motion, with poorly modeled mountain details.",
+      "Motion dynamics: Limited motion and biomechanically implausible deer head turns.",
+      "Temporal consistency: The cherry blossom tree disappears at the end.",
+      "Fine-grained details: Dragon scales lack intricate detail.",
+      "Visual realism: Poor detail reconstruction and unrealistic objects."
+    ];
+
+    title.textContent = descriptions[index];
+
+    sample.appendChild(title);
 
     /*
      * Three-column video row
@@ -1531,7 +1596,6 @@
     sample.appendChild(
       row
     );
-
 
     return sample;
 
